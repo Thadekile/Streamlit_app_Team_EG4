@@ -11,8 +11,8 @@ import pandas as pd
 # Model Options with Absolute Paths
 model_options = {
     "Logistic Regression": os.path.join(os.path.dirname(__file__), 'models/logistic_regression_pipeline.pkl'),
-    "Random Forest": os.path.join(os.path.dirname(__file__), 'models/random_forest_model.pkl'),
-    "KNN Classifier": os.path.join(os.path.dirname(__file__), 'models/knn_pipeline.pkl')
+    "Support Vector Classifier": os.path.join(os.path.dirname(__file__), 'models/pipeline_svc.pkl'),
+    "Naive bayes Classifier": os.path.join(os.path.dirname(__file__), 'models/pipeline_nb.pkl')
 }
 
 # Set page config (title, icon) ONLY for the main page
