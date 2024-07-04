@@ -1,6 +1,12 @@
 import streamlit as st
 import pickle
 import os
+from wordcloud import WordCloud, STOPWORDS  # Correct import
+import matplotlib.pyplot as plt
+from collections import Counter
+import spacy
+from textblob import TextBlob
+import pandas as pd
 
 # Model Options with Absolute Paths
 model_options = {
@@ -14,75 +20,126 @@ st.set_page_config(
     page_title="Text Prediction App", page_icon=":crystal_ball:"
 )
 
-# App Title
-st.title('Story Stream')
-st.write("This app will take in some text data you have, and predict the category this belongs to")
-st.image('app_image.jpg')
-
 # Manual Sidebar Navigation
 st.sidebar.title("Navigation")
 
 if "page" not in st.session_state:
-    st.session_state.page = "main_page"
+    st.session_state.page = "home"  # Start on the home page
 
+# Page Selection Buttons
 if st.sidebar.button("Home"):
-    st.session_state.page = "main_page"  
-    st.experimental_rerun()  # Re-run the script to reflect the change
-if st.sidebar.button("About Us"):
+    st.session_state.page = "home"
+    st.experimental_rerun()
+elif st.sidebar.button("Predict"):
+    st.session_state.page = "main_page"
+    st.experimental_rerun()
+elif st.sidebar.button("About Us"):
     st.session_state.page = "about_us"
-    st.experimental_rerun()  
-if st.sidebar.button("Explore Data"):
+    st.experimental_rerun()
+elif st.sidebar.button("Explore Data"):
     st.session_state.page = "explore_data"
-    st.experimental_rerun()  
+    st.experimental_rerun()
 
-if st.session_state.page == 'about_us':
+# Home Page
+if st.session_state.page == 'home':
+    # Create two columns with width ratio 1:4
+    col1, col2 = st.columns([1, 4])  
+
+    # Display logo in the first column (adjust width as needed)
+    with col1:
+        st.image("logo.jpg", width=100)  # Replace with your actual logo file
+
+    # Display title in the second column
+    with col2:
+        st.title("Welcome to StoryStream")
+
+    # Display app image (centered)
+    st.image("app_image.jpg") 
+
+    # Rest of your home page content
+    st.markdown(
+        """
+        <div style="text-align: center;">
+            <p style="font-size: 1.2em;">
+                <b>Empowering Editorial Teams to Uncover Hidden Trends in News & Content</b>
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        Story Stream is your AI-powered editorial assistant, designed to help you stay ahead of the curve. Our platform harnesses cutting-edge machine learning to analyze your text data and extract valuable insights that can drive your content strategy.
+        """
+    )
+
+    with st.expander(":white[**Discover Story Stream's Key Features:**]"):
+        st.markdown("- **Predict:** Uncover the topics and categories hidden within your news articles and social media posts.")
+        st.markdown("- **Explore Data:** Visualize trending keywords and phrases to identify hot topics and emerging stories.")
+        st.markdown("- **About Us:** Learn more about the team of data scientists and journalists behind Story Stream.")
+
+elif st.session_state.page == 'about_us':
     st.title("About Story Stream")
 
     st.markdown(
-    """
-    :black[Welcome to Story Stream! We are a team of passionate storytellers and data scientists 
-    dedicated to helping you understand and categorize your text data.]
+        """
+        :black[Welcome to Story Stream! We are a team of passionate storytellers and data scientists 
+        dedicated to helping you understand and categorize your text data.]
 
-    **Our Mission:**
-    :black[To empower individuals and organizations to unlock the insights hidden within their text data.]
+        **Our Mission:**
+        :black[To empower individuals and organizations to unlock the insights hidden within their text data.]
 
-    **Our Team:**
-    
-    - **Neo Modibedi:** Experienced software engineer specializing in building scalable web applications.
-    - **Thapelo Robyn Raphala:** Lead Data Scientist with 10+ years of experience in NLP and machine learning.
-    - **Thandekile Sikhakhane:** Creative writer and content strategist passionate about storytelling with data.
-    - **Mbalenhle Lenepa:** Data Scientist with 10+ years of experience in NLP and machine learning.
+        **Our Team:**
+        """
+    )
+    # Define a dictionary to store image paths for each team member
+    team_member_images = {
+        "Neo Modibedi": "NeoModibedi.jpg",  # Replace with actual image filenames
+        "Thapelo Robyn Raphala": "Robyn.jpg",
+        "Thandekile Sikhakhane": "Thandekile.jpg",
+        "Mbalenhle Lenepa": "Mbalenhle.jpg"
+    }
 
+    # Create columns for each team member and display image and description
+    for member, image_file in team_member_images.items():
+        col1, col2 = st.columns([1, 3])  # Adjust column ratio as needed
 
-    **Contact Us:**
-    
-    - **Email:** storystream@example.com
-    - **Website:** https://www.storystream.com 
-    
+        # Display image in the first column (adjust width as needed)
+        with col1:
+            st.image(image_file, width=100)
 
-    We'd love to hear from you! Try out our text prediction app on the "Predict" page and let us know what you think.
-    """
+        # Display member description in the second column
+        with col2:
+            st.markdown(f"- **{member}:** Experienced software engineer specializing in building scalable web applications.")
+    st.markdown(
+        """
+        **Contact Us:**
+
+        - **Email:** storystream@example.com
+        - **Website:** https://www.storystream.com 
+
+        We'd love to hear from you! Try out our text prediction app on the "Predict" page and let us know what you think.
+        """
     )
 
 elif st.session_state.page == 'explore_data':
-    # Code for your "Explore Data" page
-    from wordcloud import WordCloud, STOPWORDS
-    import matplotlib.pyplot as plt
-
     st.title("Explore Your Data")
+    st.markdown("Our Explore data feature will take your input text and derive insights.")
+    st.markdown("- The page will display a visual that shows the common words in your text,the bolder the text, the more common it is.This is called a **word cloud**")
+    st.markdown("- The page will display a barplot that shows the count of the frequently used words")
+    st.markdown("- Extract entities from the text and count their frequencies")
+    st.markdown("- Additionally, our feature allows you to detect the sentiment in the text,is it a positive tone,negative tone or neutral?")
 
-    # User Input (Text Area)
     st.header("Enter Text:")
     text = st.text_area("Type or paste your text here", height=200)
-
-    # Word Cloud Generation
+    sentiment = 0 # Initialize sentiment outside the if statement
+    sentiment_label = 'Neutral'
     if text:
-        # Combine default stopwords with additional custom stopwords
+        # Word Cloud Generation (same as before)
         stopwords = set(STOPWORDS)
-        additional_stopwords = {'said', 'would', 'could', 'also'}  # Add more as needed
+        additional_stopwords = {'said', 'would', 'could', 'also','and','the','that','of'}
         stopwords.update(additional_stopwords)
-
-        # Generate Word Cloud
         wordcloud = WordCloud(stopwords=stopwords, background_color="white").generate(text)
 
         # Display Word Cloud
@@ -92,9 +149,69 @@ elif st.session_state.page == 'explore_data':
         plt.tight_layout(pad=0)
         st.pyplot(plt)
 
+        # Top 10 Words Bar Chart
+        words = text.split()
+        word_counts = Counter(words)
+        top_words = word_counts.most_common(10)
+
+        # Create and display the bar chart
+        top_words_df = pd.DataFrame(top_words, columns=['Word', 'Frequency'])
+        st.bar_chart(top_words_df.set_index('Word'))
+        
+        
+
+        nlp = spacy.load("en_core_web_sm")  # Load a spaCy English model
+        doc = nlp(text)
+
+        # Extract entities and count their frequencies
+        entity_counts = Counter([ent.label_ for ent in doc.ents])
+
+        # Create and display the bar chart
+        entity_df = pd.DataFrame(entity_counts.items(), columns=['Entity', 'Frequency'])
+        st.bar_chart(entity_df.set_index('Entity'))  # Display NER bar chart
+        
+        # Categorize sentiment
+        if sentiment > 0:
+            sentiment_label = "Positive"
+        elif sentiment < 0:
+            sentiment_label = "Negative"
+        else:
+            sentiment_label = "Neutral"
+
+        # Display Sentiment
+        # Sentiment Analysis
+        blob = TextBlob(text)
+        sentiment = blob.sentiment.polarity
+
+        # Categorize sentiment
+        if sentiment > 0:
+            sentiment_label = "Positive"
+        elif sentiment < 0:
+            sentiment_label = "Negative"
+        
+
+        # Display Sentiment
+        st.subheader("Sentiment Analysis:")
+        st.write(f"Overall Sentiment: {sentiment_label} ({sentiment:.2f})")
+
+        # Create and display the pie chart
+        labels = ["Positive", "Negative", "Neutral"]
+        sizes = [
+            max(0, sentiment),
+            max(0, -sentiment), 
+            1 - abs(sentiment)  # Neutral is the remaining portion
+        ]
+        fig, ax = plt.subplots()
+        ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=140)
+        ax.axis("equal")  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+        st.pyplot(fig)
+
     else:
         st.warning("Please enter some text to generate a word cloud.")
 else: #This is your original main page
+    st.header("Hi there! \U0001F44B")
+    st.markdown("**choose a model below to predict the category of your content**")
     # Model Selection
     selected_model_name = st.selectbox(
         "Choose a model:", list(model_options.keys())
@@ -105,7 +222,7 @@ else: #This is your original main page
     user_text = st.text_area('Type or paste your text here', height=200)
 
     # Prediction Button
-    if st.button('Classify'):
+    if st.button('predict'):
         if user_text:
             with st.spinner('Classifying...'):
                 try:
@@ -131,3 +248,23 @@ else: #This is your original main page
         st.write("**Logistic Regression:** A simple yet effective linear model for classification.")
         st.write("**Random Forest:**  An ensemble model that combines multiple decision trees for improved accuracy.")
         st.write("**Support Vector Machine:** A powerful model for finding complex patterns in data.")
+
+def set_bg_hack_url():
+    '''
+    A function to unpack an image from url and set as bg.
+    Returns
+    -------
+    The background.
+    '''
+    st.markdown(f"""
+         <style>
+         .stApp {{
+             background: url("https://th.bing.com/th/id/R.d1963c15d5340e33e2efcc6c9252fd93?rik=aT2erCwidDkqSQ&riu=http%3a%2f%2fwonderfulengineering.com%2fwp-content%2fuploads%2f2014%2f07%2fLandscape-wallpapers-5.jpg&ehk=eQXzJTa5%2bRMjLs1CeOGXY4ZD0EWMFDU%2b1N%2bMclWB%2b1s%3d&risl=&pid=ImgRaw&r=0");
+             background-size: cover
+         }}
+         </style>
+         """,
+         unsafe_allow_html=True
+     )
+
+set_bg_hack_url()
