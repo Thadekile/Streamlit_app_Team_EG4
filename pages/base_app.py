@@ -36,6 +36,9 @@ elif st.sidebar.button("Predict"):
 elif st.sidebar.button("About Us"):
     st.session_state.page = "about_us"
     st.experimental_rerun()
+elif st.sidebar.button("Project Overview"):  # New button
+    st.session_state.page = "project_overview"
+    st.experimental_rerun()
 elif st.sidebar.button("Explore Data"):
     st.session_state.page = "explore_data"
     st.experimental_rerun()
@@ -47,7 +50,7 @@ if st.session_state.page == 'home':
 
     # Display logo in the first column (adjust width as needed)
     with col1:
-        st.image("logo.jpg", width=100)  # Replace with your actual logo file
+        st.image("logo1.jpg", width=100)  # Replace with your actual logo file
 
     # Display title in the second column
     with col2:
@@ -70,15 +73,16 @@ if st.session_state.page == 'home':
 
     st.markdown(
         """
-        Story Stream is your AI-powered editorial assistant, designed to help you stay ahead of the curve. Our platform harnesses cutting-edge machine learning to analyze your text data and extract valuable insights that can drive your content strategy.
+        Story Stream app is your AI-powered editorial assistant, designed to help you stay ahead of the curve. Our platform harnesses cutting-edge machine learning to analyze your text data and extract valuable insights that can drive your content strategy.
         """
     )
 
     with st.expander(":white[**Discover Story Stream's Key Features:**]"):
-        st.markdown("- **Predict:** Uncover the topics and categories hidden within your news articles and social media posts.")
-        st.markdown("- **Explore Data:** Visualize trending keywords and phrases to identify hot topics and emerging stories.")
-        st.markdown("- **About Us:** Learn more about the team of data scientists and journalists behind Story Stream.")
+        st.markdown("- **Predict:** **Uncover the topics and categories hidden within your news articles and social media posts**.")
+        st.markdown("- **Explore Data:** **Visualize trending keywords and phrases to identify hot topics and emerging stories**.")
+        st.markdown("- **About Us:** **Learn more about the team of data scientists and journalists behind Story Stream**.")
 
+#about us page
 elif st.session_state.page == 'about_us':
     st.title("About Story Stream")
 
@@ -122,7 +126,43 @@ elif st.session_state.page == 'about_us':
         We'd love to hear from you! Try out our text prediction app on the "Predict" page and let us know what you think.
         """
     )
+#Project Overview page
+if st.session_state.page == 'project_overview':
+    st.title("Project Overview")
 
+    st.subheader("The Problem")
+    st.write(
+        """
+        News outlets and content creators face challenges in quickly categorizing and understanding vast amounts of text data.  Manual classification is time-consuming and prone to errors. Additionally, identifying key trends and patterns within different content categories is difficult without specialized tools.
+        """
+    )
+
+    st.subheader("The Solution: StoryStream")
+    st.write(
+        """
+        StoryStream is an AI-powered application designed to streamline content analysis and classification. It leverages machine learning models to automatically predict the category of news articles and social media posts.  This empowers editorial teams to:
+
+        * **Quickly Classify Content:** Save time and resources by automating the categorization process.
+        * **Identify Trends:** Gain insights into popular topics and emerging stories.
+        * **Refine Content Strategy:**  Make data-driven decisions to optimize content creation and engagement.
+        """
+    )
+
+    st.subheader("Key Features")
+    st.markdown("""
+        * **Text Prediction:**  Utilizes trained machine learning models to accurately predict the category of input text.
+        * **Explore Data:**  Provides tools to visualize word clouds, word frequencies, and named entities within text data.
+        * **Sentiment Analysis:**  Assesses the overall sentiment (positive, negative, neutral) of text content.
+        """)
+
+    st.subheader("Impact and Benefits")
+    st.write(
+        """
+        StoryStream is a valuable asset for newsrooms, content marketers, and anyone working with large volumes of text data. It enhances efficiency, uncovers hidden insights, and ultimately enables users to create more relevant and impactful content.
+        """
+    )
+
+# Explore data page
 elif st.session_state.page == 'explore_data':
     st.title("Explore Your Data")
     st.markdown("Our Explore data feature will take your input text and derive insights.")
@@ -207,11 +247,12 @@ elif st.session_state.page == 'explore_data':
 
         st.pyplot(fig)
 
+
     else:
-        st.warning("Please enter some text to generate a word cloud.")
-else: #This is your original main page
-    st.header("Hi there! \U0001F44B")
-    st.markdown("**choose a model below to predict the category of your content**")
+      st.warning("Please enter some text to generate a word cloud.")
+elif st.session_state.page == 'main_page':  # Added condition for main_page
+    st.header("Predict Content Category \U0001F44B")  
+    st.markdown("**Choose a model and enter your text below:**")
     # Model Selection
     selected_model_name = st.selectbox(
         "Choose a model:", list(model_options.keys())
@@ -246,7 +287,7 @@ else: #This is your original main page
     # Model Descriptions
     with st.expander("About the Models"):
         st.write("**Logistic Regression:** A simple yet effective linear model for classification.")
-        st.write("**Random Forest:**  An ensemble model that combines multiple decision trees for improved accuracy.")
+        st.write("**Naive Bayes Classifier:**  A Naive Bayes Classifier is a simple probabilistic algorithm that makes predictions based on Bayes' theorem, assuming that features are conditionally independent given the class.")
         st.write("**Support Vector Machine:** A powerful model for finding complex patterns in data.")
 
 def set_bg_hack_url():
